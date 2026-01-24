@@ -307,8 +307,13 @@ async def health_check():
 
 @app.get("/test")
 async def get_test_page():
-    path = os.path.join(os.path.dirname(__file__), "test.html")
-    return FileResponse("test.html")
+    # This finds test.html in your root folder correctly on Vercel
+    path = os.path.join(os.path.dirname(__file__), "..", "test.html") 
+    # Note: the ".." is needed because index.py is inside /api/
+    if not os.path.exists(path):
+        # Fallback if you didn't use the api/ folder structure
+        path = os.path.join(os.path.dirname(__file__), "test.html")
+    return FileResponse(path)
 
 # At the end of main.py
 if __name__ == "__main__":
