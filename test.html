@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Form Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 700px;
+            width: 100%;
+            padding: 40px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .api-key-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .api-key-section label {
+            color: #555;
+            font-size: 13px;
+        }
+
+        .api-key-section input {
+            background: white;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        .status.loading {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            display: block;
+        }
+
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #667eea;
+            margin: 25px 0 15px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        /* Honeypot - hidden from humans */
+        .honeypot {
+            position: absolute;
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+        }
+
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📧 Contact Form Test</h1>
+        <p class="subtitle">Test your enhanced contact form API with full address fields</p>
+
+
+        <form id="contactForm">
+            <div class="section-title">👤 Personal Information</div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="firstName">First Name *</label>
+                    <input 
+                        type="text" 
+                        id="firstName" 
+                        name="first_name" 
+                        required
+                        placeholder="John"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="lastName">Last Name *</label>
+                    <input 
+                        type="text" 
+                        id="lastName" 
+                        name="last_name" 
+                        required
+                        placeholder="Doe"
+                    >
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="email">Email *</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        required
+                        placeholder="john@example.com"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone *</label>
+                    <input 
+                        type="tel" 
+                        id="phone" 
+                        name="phone" 
+                        required
+                        placeholder="+1 (555) 123-4567"
+                    >
+                </div>
+            </div>
+
+            <div class="section-title">📍 Address</div>
+
+            <div class="form-group">
+                <label for="street">Street Address *</label>
+                <input 
+                    type="text" 
+                    id="street" 
+                    name="street" 
+                    required
+                    placeholder="123 Main Street, Apt 4B"
+                >
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="city">City *</label>
+                    <input 
+                        type="text" 
+                        id="city" 
+                        name="city" 
+                        required
+                        placeholder="New York"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="state">State/Province *</label>
+                    <input 
+                        type="text" 
+                        id="state" 
+                        name="state" 
+                        required
+                        placeholder="NY"
+                    >
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="zipCode">ZIP / Postal Code *</label>
+                <input 
+                    type="text" 
+                    id="zipCode" 
+                    name="zip_code" 
+                    required
+                    placeholder="10001"
+                    style="max-width: 200px;"
+                >
+            </div>
+
+            <div class="section-title">💬 Your Message</div>
+
+            <div class="form-group">
+                <label for="subject">Subject *</label>
+                <input 
+                    type="text" 
+                    id="subject" 
+                    name="subject" 
+                    required
+                    placeholder="Website Inquiry"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="message">Message *</label>
+                <textarea 
+                    id="message" 
+                    name="message" 
+                    required
+                    placeholder="Your message here..."
+                ></textarea>
+            </div>
+
+            <!-- Honeypot field - bots will fill this, humans won't see it -->
+            <input 
+                type="text" 
+                name="honeypot" 
+                class="honeypot"
+                tabindex="-1"
+                autocomplete="off"
+            >
+
+            <button type="submit" id="submitBtn">Send Message</button>
+        </form>
+
+        <div id="status" class="status"></div>
+    </div>
+
+    <script>
+        // ========================================
+        // CONFIGURATION
+        // ========================================
+        const API_URL = 'http://127.0.0.1:8000/api/contact';
+        
+        // ========================================
+        // FORM HANDLING
+        // ========================================
+        const form = document.getElementById('contactForm');
+        const statusDiv = document.getElementById('status');
+        const submitBtn = document.getElementById('submitBtn');
+        const apiKeyInput = document.getElementById('apiKeyInput');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Get form data
+            const formData = new FormData(form);
+            const data = {
+                first_name: formData.get('first_name'),
+                last_name: formData.get('last_name'),
+                email: formData.get('email'),
+                phone: formData.get('phone'),
+                street: formData.get('street'),
+                city: formData.get('city'),
+                state: formData.get('state'),
+                zip_code: formData.get('zip_code'),
+                subject: formData.get('subject'),
+                message: formData.get('message'),
+                honeypot: formData.get('honeypot') || ''
+            };
+
+            // Show loading
+            showStatus('loading', '⏳ Sending message...');
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showStatus('success', '✅ ' + result.message);
+                    form.reset();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else {
+                    if (response.status === 429) {
+                        showStatus('error', '⏱️ Too many requests. Please wait and try again.');
+                    } else if (response.status === 422) {
+                        // Validation error
+                        const errorMsg = result.detail[0]?.msg || 'Validation error';
+                        showStatus('error', '❌ ' + errorMsg);
+                    } else {
+                        showStatus('error', '❌ ' + (result.detail || 'Failed to send message'));
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showStatus('error', '❌ Network error. Make sure the API is running at ' + API_URL);
+            } finally {
+                submitBtn.disabled = false;
+            }
+        });
+
+        function showStatus(type, message) {
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+            statusDiv.style.display = 'block';
+
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        // Check API health on load
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch(API_URL.replace('/api/contact', '/health'));
+                if (response.ok) {
+                    console.log('✅ API is running and healthy!');
+                }
+            } catch (error) {
+                console.warn('⚠️ Could not connect to API');
+                showStatus('error', '⚠️ API not detected. Start it with: uvicorn main:app --reload');
+            }
+        });
+    </script>
+</body>
+</html>
