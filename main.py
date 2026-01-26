@@ -5,7 +5,7 @@ from fastapi import FastAPI, HTTPException, Request, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, EmailStr, field_validator
-from typing import Optional
+from typing import Optional, Dict
 from contextlib import asynccontextmanager
 import smtplib
 from email.mime.text import MIMEText
@@ -55,7 +55,7 @@ def verify_api_key(x_api_key: str = Header(..., alias="X-API-Key")) -> bool:
 # ====================
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=Config.ALLOWED_ORIGINS,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["POST", "GET", "OPTIONS"],   
     allow_headers=["X-API-Key", "Content-Type", "Authorization"],
@@ -190,13 +190,17 @@ class ContactForm(BaseModel):
 # ====================
 # EMAIL SENDING
 # ====================
-def send_email(form_data: ContactForm) -> bool:
+def send_email(form_data: ContactForm, client: Dict) -> bool:
     """Send email via SMTP using configuration"""
     try:
+
+        # Decrypt the App Password from Supabase
+        real_password = Config.decrypt_password(client['sender_password'])
+
         msg = MIMEMultipart("alternative")
-        msg["Subject"] = f"New Inquiry: {form_data.subject}"
-        msg["From"] = Config.SENDER_EMAIL
-        msg["To"] = Config.RECIPIENT_EMAIL
+        msg["Subject"] = f"[{client['client_name']}] New Inquiry: {form_data.subject}"
+        msg["From"] = client['sender_email']
+        msg["To"] = client['recipient_email']
         msg["Reply-To"] = form_data.email
         
         # Comprehensive Email body
@@ -230,17 +234,15 @@ def send_email(form_data: ContactForm) -> bool:
             </body>
         </html>
         """
-        
         msg.attach(MIMEText(html_body, "html"))
         
-        with smtplib.SMTP(Config.SMTP_SERVER, Config.SMTP_PORT) as server:
+        with smtplib.SMTP(client['smtp_server'], client['smtp_port']) as server:
             server.starttls()
-            server.login(Config.SENDER_EMAIL, Config.SENDER_PASSWORD)
+            server.login(client['sender_email'], real_password)
             server.send_message(msg)
-        
         return True
     except Exception as e:
-        print(f"Email error: {str(e)}")
+        print(f"Email error for {client['client_name']}: {str(e)}")
         return False
     
 
@@ -248,10 +250,41 @@ def send_email(form_data: ContactForm) -> bool:
 # API ENDPOINTS
 # ====================
 @app.post("/api/contact")
+
+
 async def contact_form(
     form: ContactForm, 
-    request: Request
+    request: Request,
+    x_api_key: str = Header(None, alias="X-API-Key")
 ):
+    
+
+    # 1. API Key Check
+    if not x_api_key:
+        raise HTTPException(status_code=401, detail="X-API-Key header required")
+    
+    # 2. Supabase Lookup
+    try:
+        res = Config.supabase.table("clients").select("*").eq("api_key", x_api_key).single().execute()
+        client = res.data
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid API Key")
+    
+
+    # 3. Domain Validation (The real CORS)
+    origin = request.headers.get("origin")
+    # 1. Block anyone not using a browser (optional but safer)
+    if not origin:
+        raise HTTPException(status_code=403, detail="Direct API access not allowed")
+
+    # 2. Match against the specific client's allowed list
+    if origin not in client['allowed_origins']:
+        # Log this attempt so you can see who is trying to use your API
+        print(f"SECURITY ALERT: Unauthorized origin {origin} tried to use key for {client['client_name']}")
+        raise HTTPException(status_code=403, detail="This domain is not authorized to use this API Key")
+
+
+
     """Handle contact form submission"""
     
     # Get client IP
@@ -263,19 +296,23 @@ async def contact_form(
     
     # SECURITY: Rate limiting
     if not check_rate_limit(client_ip):
-        raise HTTPException(
-            status_code=429, 
-            detail="Too many requests. Please try again later."
-        )
+        raise HTTPException(status_code=429, detail="Too many requests. Please try again later.")
     
     # Send email
-    success = send_email(form)
+    success = send_email(form, client)
     
     if not success:
-        raise HTTPException(
-            status_code=500, 
-            detail="Failed to send message. Please try again."
-        )
+        raise HTTPException(status_code=500, detail="Failed to send message. Please try again.")
+    
+    # logging
+    try:
+        Config.supabase.table("email_logs").insert({
+            "client_id": client["id"],
+            "subject": form.subject,
+            "sender_email": form.email
+        }).execute()
+    except Exception as e:
+        print(f"Logging Error: {str(e)}")
     
     return {
         "success": True,

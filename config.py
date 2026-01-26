@@ -1,6 +1,8 @@
 import os
 from typing import List
 from dotenv import load_dotenv
+from cryptography.fernet import Fernet
+from supabase import create_client, Client
 
 # Load environment variables from .env file
 load_dotenv()
@@ -8,6 +10,37 @@ load_dotenv()
 class Config:
     """Application configuration loaded from environment variables"""
     
+
+    # Supabase Credentials
+    SUPABASE_URL = os.getenv("SUPABASE_URL")
+    SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") 
+
+    # Initialize Supabase Client
+    if SUPABASE_URL and SUPABASE_KEY:
+        supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+    else:
+        supabase = None
+
+
+    # Master Encryption (Optional but recommended)
+    ENCRYPTION_KEY = os.getenv("MASTER_ENCRYPTION_KEY")
+
+    # Generate this using: Fernet.generate_key().decode()
+    cipher = Fernet(ENCRYPTION_KEY.encode()) if ENCRYPTION_KEY else None
+
+    @staticmethod
+    def decrypt_password(encrypted_password: str) -> str:
+        if not Config.cipher: return encrypted_password
+        return Config.cipher.decrypt(encrypted_password.encode()).decode()
+
+    # --- Static Fallbacks (Keep for your own portfolio use) ---
+    ALLOWED_ORIGINS: List[str] = [
+        o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()
+    ]
+    MAX_REQUESTS_PER_HOUR: int = int(os.getenv("MAX_REQUESTS_PER_HOUR", 10))
+
+
+
     # SMTP Configuration
     SMTP_SERVER: str = os.getenv("SMTP_SERVER", "smtp.gmail.com")
     SMTP_PORT: int = int(os.getenv("SMTP_PORT", 587))
@@ -86,6 +119,8 @@ class Config:
             print(f"Recipient Email : {cls.RECIPIENT_EMAIL}")
             print(f"Password Set    : {'✅' if cls.SENDER_PASSWORD else '❌'}")
             print(f"🔐 API Key Set  : {'✅ Yes' if cls.API_KEY else '⚠️  No (Insecure)'}")
+            print(f"Connected to Supabase: {'✅' if cls.supabase else '❌'}")
+            print(f"Encryption Active: {'✅' if cls.cipher else '❌'}")
             print(f"CORS Allowed    : {', '.join(cls.ALLOWED_ORIGINS)}")
             print(f"Rate Limit      : {cls.MAX_REQUESTS_PER_HOUR} req/hr")
             print(f"Validation      : Name({cls.FIRST_NAME_MIN_LENGTH}-{cls.FIRST_NAME_MAX_LENGTH}), "

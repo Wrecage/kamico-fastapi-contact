@@ -45,3 +45,9 @@ Thumbs.db
 
 old/
 temp/
+
+
+#admin tools
+scripts/
+admin_tool.py
+client_report.py
