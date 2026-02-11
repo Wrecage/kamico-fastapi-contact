@@ -76,10 +76,7 @@ ALLOWED_ORIGINS=http://localhost:8000,http://127.0.0.1:8000,https://yourdomain.c
   "last_name": "Peñaloza",
   "email": "juan@example.com",
   "phone": "+1 (555) 123-4567",
-  "street": "123 Main Street",
-  "city": "New York",
-  "state": "NY",
-  "zip_code": "10001",
+  "location": "Mountain side north river",
   "subject": "Website Inquiry",
   "message": "I'm interested in your services...",
   "honeypot": ""

@@ -70,6 +70,10 @@ class Config:
     FIRST_NAME_MAX_LENGTH: int = 50
     LAST_NAME_MIN_LENGTH: int = 2
     LAST_NAME_MAX_LENGTH: int = 50
+
+    LOCATION_MIN_LENGTH: int = 3
+    LOCATION_MAX_LENGTH: int = 200
+
     SUBJECT_MIN_LENGTH: int = 3
     SUBJECT_MAX_LENGTH: int = 200   
     MESSAGE_MIN_LENGTH: int = 10
@@ -78,8 +82,6 @@ class Config:
     # Address/Phone Limits
     PHONE_MIN_LENGTH: int = 7
     PHONE_MAX_LENGTH: int = 20
-    ZIP_MIN_LENGTH: int = 2
-    ZIP_MAX_LENGTH: int = 10
     
     # Spam Detection
     SPAM_KEYWORDS: List[str] = [
@@ -128,6 +130,9 @@ class Config:
             print("=" * 50)
             print(f"Validation      : Name({cls.LAST_NAME_MIN_LENGTH}-{cls.LAST_NAME_MAX_LENGTH}), "
                 f"Msg({cls.MESSAGE_MIN_LENGTH}-{cls.MESSAGE_MAX_LENGTH})")
+            print(f"Validation      : Name({cls.FIRST_NAME_MIN_LENGTH}-{cls.FIRST_NAME_MAX_LENGTH}), "
+              f"Loc({cls.LOCATION_MIN_LENGTH}-{cls.LOCATION_MAX_LENGTH}), "
+              f"Msg({cls.MESSAGE_MIN_LENGTH}-{cls.MESSAGE_MAX_LENGTH})")
             print("=" * 50)
 
 

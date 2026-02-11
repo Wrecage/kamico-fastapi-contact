@@ -131,12 +131,9 @@ class ContactForm(BaseModel):
     @classmethod
     def validate_location(cls, v):
         v = v.strip()
-        if len(v) < 3:
-            raise ValueError('Location description is too short')
-        if len(v) > 200:
-            raise ValueError('Location description is too long')
+        if len(v) < Config.LOCATION_MIN_LENGTH or len(v) > Config.LOCATION_MAX_LENGTH:
+            raise ValueError(f'Location must be between {Config.LOCATION_MIN_LENGTH} and {Config.LOCATION_MAX_LENGTH} characters')
         return v
-    
     
     @field_validator('subject')
     @classmethod
@@ -274,9 +271,6 @@ async def contact_form(
         print(f"SECURITY ALERT: Unauthorized origin {origin} tried to use key for {client['client_name']}")
         raise HTTPException(status_code=403, detail="This domain is not authorized to use this API Key")
 
-
-
-    """Handle contact form submission"""
     
     # Get client IP
     client_ip = request.headers.get("x-forwarded-for", request.client.host)   
