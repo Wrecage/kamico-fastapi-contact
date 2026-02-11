@@ -89,10 +89,7 @@ class ContactForm(BaseModel):
     last_name: str
     email: EmailStr
     phone: str
-    street: str
-    city: str
-    state: str
-    zip_code: str
+    location:str    
     subject: str
     message: str
     honeypot: Optional[str] = "" # for bot trapping
@@ -130,42 +127,14 @@ class ContactForm(BaseModel):
             raise ValueError('Invalid phone number format')
         return v
     
-
-
-    @field_validator('street')
+    @field_validator('location')
     @classmethod
-    def validate_street(cls, v):
+    def validate_location(cls, v):
         v = v.strip()
-        if len(v) < 5:
-            raise ValueError('Street address is too short')
-        return v
-
-    @field_validator('city')
-    @classmethod
-    def validate_city(cls, v):
-        v = v.strip()
-        if len(v) < 2:
-            raise ValueError('City name is too short')
-        return v
-
-    @field_validator('state')
-    @classmethod
-    def validate_state(cls, v):
-        v = v.strip()
-        if len(v) < 2:
-            raise ValueError('Please provide a valid State/Province')
-        return v
-
-    @field_validator('zip_code')
-    @classmethod
-    def validate_zip(cls, v):
-        v = v.strip()
-        # Using the lengths from your Config class
-        if len(v) < Config.ZIP_MIN_LENGTH or len(v) > Config.ZIP_MAX_LENGTH:
-            raise ValueError(f'Zip code must be between {Config.ZIP_MIN_LENGTH} and {Config.ZIP_MAX_LENGTH} characters')
-        # Check if it's alphanumeric (handles US 12345 and UK/Canada A1B 2C3)
-        if not re.match(r"^[a-zA-Z0-9\s-]+$", v):
-            raise ValueError('Invalid Zip/Postal code format')
+        if len(v) < 3:
+            raise ValueError('Location description is too short')
+        if len(v) > 200:
+            raise ValueError('Location description is too long')
         return v
     
     
@@ -206,67 +175,55 @@ def send_email(form_data: ContactForm, client: Dict) -> bool:
         # Comprehensive Email body
         html_body = f"""
         <html>
-        <body style="font-family: 'JetBrains Mono', 'Courier New', monospace; margin: 0; padding: 20px; background-color: #f5f5f5;">
-            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 3px solid #341409;">
-                <!-- Header -->
-                <div style="background-color: #333333; padding: 28px 25px; border-bottom: 3px solid #FFC0CB;">
-                    <h1 style="margin: 0; color: #ccc2ab; font-size: 20px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;">New Contact Submission</h1>
-                </div>
+                <body style="font-family: 'JetBrains Mono', 'Courier New', monospace; margin: 0; padding: 20px; background-color: #f5f5f5;">
+                    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 2px solid #222222;">
+                        <div style="background-color: #1a1a1a; padding: 25px; border-bottom: 4px solid #00FFFF;">
+                            <h1 style="margin: 0; color: #00FFFF; font-size: 18px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">New Submission</h1>
+                        </div>
 
-                <!-- Contact Info -->
-                <div style="padding: 28px 25px;">
-                    <div style="margin-bottom: 20px;">
-                        <p style="margin: 0 0 4px 0; color: #341409; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;">Name</p>
-                        <p style="margin: 0; color: #4f3736; font-size: 14px; line-height: 1.5;">{form_data.first_name} {form_data.last_name}</p>
+                        <div style="padding: 25px;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td style="padding-bottom: 20px;">
+                                        <p style="margin: 0 0 5px 0; color: #888888; font-size: 10px; font-weight: 700; text-transform: uppercase;">From</p>
+                                        <p style="margin: 0; color: #222222; font-size: 14px;">{form_data.first_name} {form_data.last_name}</p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding-bottom: 20px;">
+                                        <p style="margin: 0 0 5px 0; color: #888888; font-size: 10px; font-weight: 700; text-transform: uppercase;">Email & Phone</p>
+                                        <p style="margin: 0; color: #222222; font-size: 14px;">{form_data.email} | {form_data.phone}</p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding-bottom: 20px;">
+                                        <p style="margin: 0 0 5px 0; color: #888888; font-size: 10px; font-weight: 700; text-transform: uppercase;">Location</p>
+                                        <p style="margin: 0; color: #222222; font-size: 14px;">{form_data.location}</p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div style="padding: 0 25px 25px 25px;">
+                            <div style="border-top: 1px solid #eeeeee; padding-top: 20px;">
+                                <p style="margin: 0 0 5px 0; color: #888888; font-size: 10px; font-weight: 700; text-transform: uppercase;">Subject</p>
+                                <p style="margin: 0 0 20px 0; color: #222222; font-size: 15px; font-weight: 700;">{form_data.subject}</p>
+                                
+                                <p style="margin: 0 0 8px 0; color: #888888; font-size: 10px; font-weight: 700; text-transform: uppercase;">Message</p>
+                                <div style="background-color: #fcfcfc; border-left: 3px solid #00FFFF; padding: 15px; margin: 0;">
+                                    <p style="margin: 0; color: #333333; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">{form_data.message}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="padding: 15px 25px; background-color: #1a1a1a; text-align: center;">
+                            <p style="margin: 0; color: #666666; font-size: 9px; letter-spacing: 1px;">
+                                TIMESTAMPT: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+                            </p>
+                        </div>
                     </div>
-
-                    <div style="margin-bottom: 20px;">
-                        <p style="margin: 0 0 4px 0; color: #333333; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;">Email</p>
-                        <p style="margin: 0; color: #4f3736; font-size: 14px; line-height: 1.5; font-weight: 600;">{form_data.email}</p>
-                    </div>
-
-                    <div style="margin-bottom: 0;">
-                        <p style="margin: 0 0 4px 0; color: #333333; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;">Phone</p>
-                        <p style="margin: 0; color: #4f3736; font-size: 14px; line-height: 1.5; font-weight: 600;" >{form_data.phone}</p>
-                    </div>
-                </div>
-
-                <!-- Address Section -->
-                <div style="padding: 0 25px 28px 25px; border-top: 2px solid #e8e8e8;">
-                    <p style="margin: 20px 0 12px 0; color: #333333; font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;">Address</p>
-                    <div style="border-left: 4px solid #FFC0CB; padding-left: 16px; background-color: #fafafa; padding: 14px 14px 14px 16px; border-left: 4px solid #FFC0CB;">
-                        <p style="margin: 0; color: #4f3736; font-size: 13px; line-height: 1.6;">
-                            {form_data.street}<br>
-                            {form_data.city}, {form_data.state} {form_data.zip_code}
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Subject Section -->
-                <div style="padding: 0 25px 28px 25px; border-top: 2px solid #e8e8e8;">
-                    <p style="margin: 20px 0 4px 0; color: #333333; font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;">Subject</p>
-                    <p style="margin: 0; color: #333333; font-size: 15px; line-height: 1.5; font-weight: 700;">{form_data.subject}</p>
-                </div>
-
-                <!-- Message Section -->
-                <div style="padding: 0 25px 28px 25px; border-top: 2px solid #e8e8e8;">
-                    <p style="margin: 20px 0 12px 0; color: #333333; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;">Message</p>
-                    <div style="background-color: #fafafa; padding: 16px; border-left: 4px solid #68809c; white-space: pre-wrap; border-left: 4px solid #68809c;">
-                        <p style="margin: 0; color: #4f3736; font-size: 13px; line-height: 1.6; white-space: pre-wrap;">
-                            {form_data.message}
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Footer -->
-                <div style="padding: 20px 25px; background-color: #333333; text-align: center; border-top: 3px solid #FFC0CB;">
-                    <p style="margin: 0; color: #ccc2ab; font-size: 10px; letter-spacing: 0.5px;">
-                        Submitted {datetime.now().strftime('%B %d, %Y at %H:%M:%S')}
-                    </p>
-                </div>
-            </div>
-        </body>
-        </html>
+                </body>
+                </html>
         """
         msg.attach(MIMEText(html_body, "html"))
         
