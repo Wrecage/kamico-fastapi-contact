@@ -1,0 +1,15 @@
+name: Supabase Keep Alive
+on:
+  schedule:
+    # 20:00 UTC is 04:00 AM PHT (Philippines Standard Time)
+    - cron: '0 20 * * *'
+  workflow_dispatch: # Allows you to run it manually for testing
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+          - name: Send Heartbeat Request
+            run: |
+              curl -X GET "https://kamico-fastapi-contact.vercel.app/api/keep-alive" \
+              -H "X-API-Key: ${{ secrets.KAMICO_API_KEY }}"

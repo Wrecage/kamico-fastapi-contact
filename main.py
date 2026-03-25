@@ -304,6 +304,7 @@ async def contact_form(
         "message": "Your message has been sent successfully!"
     }
 
+
 @app.get("/")
 async def root():
     """Health check endpoint"""
@@ -336,6 +337,47 @@ async def get_test_page():
         # Fallback if you didn't use the api/ folder structure
         path = os.path.join(os.path.dirname(__file__), "test.html")
     return FileResponse(path)
+
+
+
+
+
+@app.get("/api/keep-alive")
+async def keep_alive(x_api_key: str = Header(None, alias="X-API-Key")):
+    """Secure endpoint to prevent Supabase from pausing"""
+    
+    # Check key (use your existing config key)
+    if x_api_key != Config.API_KEY:
+        raise HTTPException(status_code=401, detail="Unauthorized heartbeat")
+
+    await trigger_heartbeat()
+    return {"status": "alive", "timestamp": datetime.now()}
+    
+# --- Helper for Heartbeat ---
+async def trigger_heartbeat():
+    try:
+        if Config.supabase:
+            Config.supabase.table("system_health").update({
+                "last_ping": datetime.now().isoformat()
+            }).eq("id", 1).execute()
+            print("💓 Extra Sneaky Heartbeat: Supabase is awake.")
+    except Exception as e:
+        print(f"💔 Heartbeat failed: {e}")
+
+# --- Updated Lifespan ---
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup logic
+    Config.display_config()
+    
+    # EXTRA SNEAKY: Ping Supabase immediately on startup
+    await trigger_heartbeat()
+    
+    yield
+    # Shutdown logic
+    print("\n👋 Shutting down...\n")
+
+
 
 # At the end of main.py
 if __name__ == "__main__":
